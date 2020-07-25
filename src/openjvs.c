@@ -44,8 +44,6 @@ int main(int argc, char **argv)
     strcpy(localConfig->defaultGamePath, argv[1]);
   }
 
-  debug(0, "You are currently emulating a \033[0;31m%s\033[0m on %s.\n\n", localConfig->capabilities.displayName, localConfig->devicePath);
-  debug(0, "  Output:\t\t%s\n", localConfig->defaultGamePath);
 
   if (!initInputs(localConfig->defaultGamePath))
   {
@@ -54,7 +52,6 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
-  debug(0, "\nDebug messages will appear below, you are in debug mode %d.\n\n", localConfig->debugLevel);
 
   /* Setup the JVS Emulator with the RS485 path and capabilities */
   if (!initJVS(localConfig->devicePath, &localConfig->capabilities))
@@ -63,6 +60,11 @@ int main(int argc, char **argv)
     return EXIT_FAILURE;
   }
 
+  debug(0, "You are currently emulating a \033[0;31m%s\033[0m on %s.\n\n", localConfig->capabilities.displayName, localConfig->devicePath);
+  debug(0, "  Output:\t\t%s\n", localConfig->defaultGamePath);
+  
+  debug(0, "\nDebug messages will appear below, you are in debug mode %d.\n\n", localConfig->debugLevel);
+  
   /* Process packets forever */
   JVSStatus processingStatus;
   while (running)
@@ -71,7 +73,7 @@ int main(int argc, char **argv)
     switch (processingStatus)
     {
     case JVS_STATUS_ERROR_CHECKSUM:
-      debug(0, "Error: A checksum error occoured\n");
+      //debug(0, "Error: A checksum error occoured\n");
       break;
     case JVS_STATUS_ERROR_TIMEOUT:
       break;

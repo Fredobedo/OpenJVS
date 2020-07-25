@@ -166,7 +166,7 @@ void *deviceThread(void *_args)
                     if (x0 != 1023 && x1 != 1023 && y0 != 1023 && y1 != 1023)
                     {
                         /* Set screen in player 1 */
-                        setSwitch(PLAYER_1, BUTTON_2, 0);
+                        //setSwitch(PLAYER_1, BUTTON_2, 0);
                         int middlex = (int)((double)(x0 + x1) / 2.0);
                         int middley = (int)((double)(y0 + y1) / 2.0);
 
@@ -184,11 +184,11 @@ void *deviceThread(void *_args)
                     else
                     {
                         /* Set screen out player 1 */
-                        setSwitch(PLAYER_1, BUTTON_2, 1);
+                        //setSwitch(PLAYER_1, BUTTON_2, 1);
                         setAnalogue(0, 0);
                         setAnalogue(1, 0);
-                        setGun(0, 0);
-                        setGun(1, 0);
+                        //setGun(0, 0);
+                        //setGun(1, 0);
                     }
                     continue;
                 }
@@ -202,7 +202,7 @@ void *deviceThread(void *_args)
                     scaled = scaled > 1 ? 1 : scaled;
                     scaled = scaled < 0 ? 0 : scaled;
 
-                    setAnalogue(inputs.abs[event.code].output, inputs.abs[event.code].reverse ? 1 - scaled : scaled);
+                    //setAnalogue(inputs.abs[event.code].output, inputs.abs[event.code].reverse ? 1 - scaled : scaled);
                     setGun(inputs.abs[event.code].output, inputs.abs[event.code].reverse ? 1 - scaled : scaled);
                 }
             }

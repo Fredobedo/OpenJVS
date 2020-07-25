@@ -1,7 +1,7 @@
 #include "device.h"
 #include "debug.h"
 
-#define TIMEOUT_SELECT 200
+#define TIMEOUT_SELECT 1
 
 int serialIO = -1;
 int localSenseLinePin = 12;
@@ -71,7 +71,7 @@ int readBytes(unsigned char *buffer, int amount)
   FD_SET(serialIO, &fd_serial);
 
   tv.tv_sec = 0;
-  tv.tv_usec = TIMEOUT_SELECT * 1000;
+  tv.tv_usec = TIMEOUT_SELECT * 500;
 
   int filesReadyToRead = select(serialIO + 1, &fd_serial, NULL, NULL, &tv);
 

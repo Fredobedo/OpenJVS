@@ -40,7 +40,6 @@ int initIO(JVSCapabilities *capabilitiesSetup)
 	analogueMax = pow(2, capabilities.analogueInBits) - 1;
 	gunXMax = pow(2, capabilities.gunXBits) - 1;
 	gunYMax = pow(2, capabilities.gunYBits) - 1;
-
 	return 1;
 }
 
@@ -89,7 +88,7 @@ int setGun(JVSInput channel, double value)
 	}
 	else
 	{
-		state.gunChannel[channel] = (int)((double)((double)1.0 - value) * (double)gunYMax);
+		state.gunChannel[channel] = (int)((double)value * (double)gunYMax);
 	}
 	return 1;
 }

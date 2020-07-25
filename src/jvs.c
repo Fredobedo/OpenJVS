@@ -457,8 +457,10 @@ JVSStatus processPacket()
 			debug(1, "CMD_READ_LIGHTGUN\n");
 			size = 2;
 
-			int analogueXData = localState->gunChannel[0] << (16 - localCapabilities->gunXBits);
-			int analogueYData = localState->gunChannel[1] << (16 - localCapabilities->gunYBits);
+			int analogueXData = localState->gunChannel[0];
+			int analogueYData = localState->gunChannel[1];
+			//printf("GUN %d, %d\n", analogueXData, analogueYData);
+
 			outputPacket.data[outputPacket.length] = REPORT_SUCCESS;
 			outputPacket.data[outputPacket.length + 1] = analogueXData >> 8;
 			outputPacket.data[outputPacket.length + 2] = analogueXData;

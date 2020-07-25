@@ -193,12 +193,27 @@ static const JVSCapabilities NAMCO_JYU_IO = {
     .gunYBits = 16,
     .displayName = "Namco JYU IO"};
 
+static const JVSCapabilities NAMCO_V185_IO = {
+    .name = "namco ltd.;TSS-I/O;Ver2.02;JPN,GUN_EXTENTION",
+    .players = 2,
+    .switches = 12,
+    .commandVersion = 0x11,
+    .jvsVersion = 0x20,
+    .commsVersion = 0x10,
+    .coins = 2,
+    .generalPurposeOutputs = 9,
+    .gunChannels = 2,
+    .gunXBits = 10,
+    .gunYBits = 8,
+    .displayName = "Namco V185 IO (Time Crisis 2)"};
+
 static const struct
 {
     const char *string;
     const JVSCapabilities capabilities;
 } jvsCapabilitiesConversion[] = {
     {"SEGA_TYPE_3_IO", SEGA_TYPE_3_IO},
+    {"NAMCO_V185_IO", NAMCO_V185_IO},
     {"NAMCO_JYU_IO", NAMCO_JYU_IO}};
 
 JVSCapabilities *getCapabilities();
