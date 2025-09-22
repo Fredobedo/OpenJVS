@@ -19,6 +19,7 @@ dtoverlay=uart3-pi5
 6. make sure to have  /etc/openjvs/devices/pwr_button.disabled, so openJVS does not take into account the raspberry pi 5's power button as input device.
 
 What's openJVS?
+
 OpenJVS is an emulator for I/O boards in arcade machines that use the JVS protocol. It requires a USB RS485 converter, or an official OpenJVS HAT.
 
 The following arcade boards are supported:
