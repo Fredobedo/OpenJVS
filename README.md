@@ -1,7 +1,7 @@
 # OpenJVS (libgpiod)
 What's new?  
 This is an updated version of the excellent Bobby's openJVS project. 
-The /sys/class/gpio interface used by openJVS for interacting with boards's sense line is deprecated; this version uses libgiod instead.
+The /sys/class/gpio interface used by openJVS for interacting with board's sense line is deprecated; this version uses libgiod instead.
 
 This version was tested and confirmed working on a raspberry pi 5.
 OpenJVS HAT is also confirmed working.
