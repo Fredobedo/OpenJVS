@@ -13,8 +13,7 @@ dtoverlay=uart3-pi5
 
 2. install dependencies "sudo apt install gpiod libgpiod-dev"
 3. compile and install as usual.
-4. In case you use openJVS HAT  with your raspberry pi 5, change openJVS config file "DEVICE_PATH /dev/ttyAMA2" (all jumpers on the left, UART2 on GPIO 4 & 5).
-C/o https://github.com/raspberrypi/firmware/blob/e57538c91b473d23f98bf41fcffdc61b4198a632/boot/overlays/README#L5292
+4. In case you use openJVS HAT  with your raspberry pi 5, change openJVS config file "DEVICE_PATH /dev/ttyAMA2" (all jumpers on the left, UART2 on GPIO 4 & 5, https://github.com/raspberrypi/firmware/blob/e57538c91b473d23f98bf41fcffdc61b4198a632/boot/overlays/README#L5292).   
 6. make sure to have  /etc/openjvs/devices/pwr_button.disabled, so openJVS does not take into account the raspberry pi 5's power button as input device.
 
 What's openJVS?
