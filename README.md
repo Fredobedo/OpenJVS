@@ -8,7 +8,7 @@ OpenJVS HAT is also confirmed working.
 
 How to make it work on a Raspberry pi 5 ?
 1. Enable raspberry PI UART ports by updating your raspberry pi 5 config.txt file with these entries:  
-dtoverlay=uart2-pi5
+dtoverlay=uart2-pi5  
 dtoverlay=uart3-pi5
 
 2. install dependencies "sudo apt install gpiod libgpiod-dev"
