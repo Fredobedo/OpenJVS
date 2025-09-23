@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.10)
 
 project(openjvs
-        VERSION "3.7"
+        VERSION "3.8.0"
 		LANGUAGES "C"
         DESCRIPTION "An emulator for arcade JVS I/O boards"
         HOMEPAGE_URL "https://github.com/OpenJVS"
@@ -23,7 +23,7 @@ set_target_properties(${PROJECT_NAME} PROPERTIES
 
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wextra -Wpedantic)
 
-target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} m)
+target_link_libraries(${PROJECT_NAME} ${CMAKE_THREAD_LIBS_INIT} m gpiod)
 
 install(TARGETS ${PROJECT_NAME}
 		COMPONENT ${PROJECT_NAME}

@@ -1,6 +1,8 @@
 #include "hardware/device.h"
 #include "console/debug.h"
 
+#include <gpiod.h>
+
 #define TIMEOUT_SELECT 200
 
 int serialIO = -1;
@@ -11,6 +13,9 @@ int setSerialAttributes(int fd, int myBaud);
 int setupGPIO(int pin);
 int setGPIODirection(int pin, int dir);
 int writeGPIO(int pin, int value);
+
+struct gpiod_chip *chip;
+struct gpiod_line *line;
 
 int initDevice(char *devicePath, int senseLineType, int senseLinePin)
 {
@@ -170,20 +175,89 @@ int setGPIODirection(int pin, int dir)
 
 int writeGPIO(int pin, int value)
 {
-  static const char stringValues[] = "01";
+  int rc = 0;
+  chip = gpiod_chip_open("/dev/gpiochip0");
+  if (chip == NULL)
+  {
+    debug(1, "Error: can not open chip /dev/gpiochip0");
+  }
+  else
+  {
+    // CREATE A NEW REQUEST CONFIG
+    struct gpiod_request_config *req_cfg = gpiod_request_config_new();
+    if (req_cfg == NULL)
+    {
+      debug(1, "Error: can not create request config");
+    }
+    else
+    {
+      // SET REQUEST CONFIG NAME
+      gpiod_request_config_set_consumer(req_cfg, "openjvs-sense");
 
-  char path[100];
-  int fd;
+      // CREATE A NEW LINE SETTINGS
+      struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
+      if (line_settings == NULL)
+      {
+        debug(1, "Error: can not create line settings");
+      }
+      else
+      {
+        // SET LINE DIRECTION AND VALUE
+        gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_OUTPUT);
+        gpiod_line_settings_set_output_value(line_settings, value ? GPIOD_LINE_VALUE_ACTIVE : GPIOD_LINE_VALUE_INACTIVE);
 
-  snprintf(path, 100, "/sys/class/gpio/gpio%d/value", pin);
-  if ((fd = open(path, O_WRONLY)) == -1)
-    return 0;
+        // LINE CONFIG
+        struct gpiod_line_config *line_config = gpiod_line_config_new();
 
-  if (write(fd, &stringValues[LOW == value ? 0 : 1], 1) != 1)
-    return 0;
+        if (line_config == NULL)
+        {
+          debug(1, "Error: can not create line config");
+        }
+        else
+        {
+          // ADD LINE SETTINGS
+          unsigned int LINE_OFFSET = (unsigned int)pin;
+          rc = gpiod_line_config_add_line_settings(line_config, &LINE_OFFSET, 1, line_settings);
+          if (rc < 0)
+          {
+            debug(1, "Error: can not add line settings to line config");
+          }
+          else
+          {
+            // SET OUTPUT VALUE
+            enum gpiod_line_value output_value = value ? GPIOD_LINE_VALUE_ACTIVE : GPIOD_LINE_VALUE_INACTIVE;
+            rc = gpiod_line_config_set_output_values(line_config, &output_value, 1);
+            if (rc < 0)
+            {
+              debug(1, "Error: can not set output value");
+            }
+            else
+            {
+              struct gpiod_line_request *request = gpiod_chip_request_lines(chip, req_cfg, line_config);
+              if (request == NULL)
+              {
+                debug(1, "Error: can not request line");
+                rc = 0;
+              }
+              else
+              {
+                // Success
+                debug(1, "Debug: GPIO pin %d set to %d\n", pin, value);
+                gpiod_line_request_release(request);
+                rc = 1;
+              }
+            }
+          }
+          gpiod_line_settings_free(line_settings);
+          gpiod_line_config_free(line_config);
+        }
+        gpiod_request_config_free(req_cfg);
+      }
+      gpiod_chip_close(chip);
+    }
+  }
 
-  close(fd);
-  return 1;
+  return rc;
 }
 
 int readGPIO(int pin)
