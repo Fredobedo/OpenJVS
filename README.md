@@ -28,7 +28,8 @@ dtoverlay=uart3-pi5
 - https://libgpiod.readthedocs.io/en/latest/gpio_tools.html  
   
 (\*\*\*\*)  UART2, GPIO 4 & 5:   
-https://github.com/raspberrypi/firmware/blob/e57538c91b473d23f98bf41fcffdc61b4198a632/boot/overlays/README#L5292  
+- https://github.com/raspberrypi/firmware/blob/e57538c91b473d23f98bf41fcffdc61b4198a632/boot/overlays/README#L5292  
+
 
 
 What's openJVS?  

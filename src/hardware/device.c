@@ -139,40 +139,160 @@ int setSerialAttributes(int fd, int myBaud)
 
 int setupGPIO(int pin)
 {
-  char buffer[3];
-  ssize_t bytesWritten;
-  int fd;
-
-  if ((fd = open("/sys/class/gpio/export", O_WRONLY)) == -1)
+  struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip0");
+  if (!chip)
+  {
+    debug(1, "Error: cannot open chip /dev/gpiochip0");
     return 0;
+  }
 
-  bytesWritten = snprintf(buffer, 3, "%d", pin);
-  if (write(fd, buffer, bytesWritten) != bytesWritten)
+  struct gpiod_request_config *req_cfg = gpiod_request_config_new();
+  if (!req_cfg)
+  {
+    debug(1, "Error: cannot create request config");
+    gpiod_chip_close(chip);
     return 0;
+  }
+  gpiod_request_config_set_consumer(req_cfg, "openjvs-sense");
 
-  close(fd);
-  return 1;
+  struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
+  if (!line_settings)
+  {
+    debug(1, "Error: cannot create line settings");
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return 0;
+  }
+  // Default to input, can be changed later by setGPIODirection
+  gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_INPUT);
+
+  struct gpiod_line_config *line_config = gpiod_line_config_new();
+  if (!line_config)
+  {
+    debug(1, "Error: cannot create line config");
+    gpiod_line_settings_free(line_settings);
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return 0;
+  }
+
+  unsigned int LINE_OFFSET = (unsigned int)pin;
+  int rc = gpiod_line_config_add_line_settings(line_config, &LINE_OFFSET, 1, line_settings);
+  if (rc < 0)
+  {
+    debug(1, "Error: cannot add line settings to line config");
+    gpiod_line_config_free(line_config);
+    gpiod_line_settings_free(line_settings);
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return 0;
+  }
+
+  struct gpiod_line_request *request = gpiod_chip_request_lines(chip, req_cfg, line_config);
+  if (!request)
+  {
+    debug(1, "Error: cannot request line for setup");
+    rc = 0;
+  }
+  else
+  {
+    debug(1, "Debug: GPIO pin %d setup complete\n", pin);
+    gpiod_line_request_release(request);
+    rc = 1;
+  }
+
+  gpiod_line_config_free(line_config);
+  gpiod_line_settings_free(line_settings);
+  gpiod_request_config_free(req_cfg);
+  gpiod_chip_close(chip);
+
+  return rc;
 }
 
 int setGPIODirection(int pin, int dir)
 {
-  static const char s_directions_str[] = "in\0out";
-
-  char path[35];
-  int fd;
-
-  snprintf(path, 35, "/sys/class/gpio/gpio%d/direction", pin);
-  if ((fd = open(path, O_WRONLY)) == -1)
+  int rc = 0;
+  struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip0");
+  if (chip == NULL)
+  {
+    debug(1, "Error: cannot open chip /dev/gpiochip0");
     return 0;
+  }
 
-  int length = IN == dir ? 2 : 3;
-  if (write(fd, &s_directions_str[IN == dir ? 0 : 3], length) != length)
+  struct gpiod_request_config *req_cfg = gpiod_request_config_new();
+  if (req_cfg == NULL)
+  {
+    debug(1, "Error: cannot create request config");
+    gpiod_chip_close(chip);
     return 0;
+  }
+  gpiod_request_config_set_consumer(req_cfg, "openjvs-sense");
 
-  close(fd);
-  return 1;
+  struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
+  if (line_settings == NULL)
+  {
+    debug(1, "Error: cannot create line settings");
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return 0;
+  }
+
+  if (dir == IN)
+    gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_INPUT);
+  else
+    gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_OUTPUT);
+
+  struct gpiod_line_config *line_config = gpiod_line_config_new();
+  if (line_config == NULL)
+  {
+    debug(1, "Error: cannot create line config");
+    gpiod_line_settings_free(line_settings);
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return 0;
+  }
+
+  unsigned int LINE_OFFSET = (unsigned int)pin;
+  rc = gpiod_line_config_add_line_settings(line_config, &LINE_OFFSET, 1, line_settings);
+  if (rc < 0)
+  {
+    debug(1, "Error: cannot add line settings to line config");
+    rc = 0;
+  }
+  else
+  {
+    struct gpiod_line_request *request = gpiod_chip_request_lines(chip, req_cfg, line_config);
+    if (request == NULL)
+    {
+      debug(1, "Error: cannot request line for direction");
+      rc = 0;
+    }
+    else
+    {
+      debug(1, "Debug: GPIO pin %d direction set to %s\n", pin, dir == IN ? "IN" : "OUT");
+      gpiod_line_request_release(request);
+      rc = 1;
+    }
+  }
+
+  gpiod_line_config_free(line_config);
+  gpiod_line_settings_free(line_settings);
+  gpiod_request_config_free(req_cfg);
+  gpiod_chip_close(chip);
+
+  return rc;
 }
 
+// 2 major changes here for Raspberry PI 5 support with latest builds:
+// - use libgpiod instead of sysfs (deprecated)
+// - change config.txt to use dtoverlay=uart2-pi5 (to keep GPIOs 4-5 for openJVS HAT with all jumpers on the left)
+// - set openjvs config to DEVICE_PATH /dev/ttyAMA2
+//
+// Some doc:
+//   changes in dtoverlay:   https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README
+//   GPIO's:                 https://pip.raspberrypi.com/categories/685-app-notes-guides-whitepapers/documents/RP-006553-WP/A-history-of-GPIO-usage-on-Raspberry-Pi-devices-and-current-best-practices.pdf
+//   openJVS HAT GPIO usage: https://github.com/OpenJVS/OpenJVS/blob/master/docs/OpenJVS_IO_Manual_1.2.pdf
+//   new tools:              https://libgpiod.readthedocs.io/en/latest/gpio_tools.html
 int writeGPIO(int pin, int value)
 {
   int rc = 0;
@@ -262,19 +382,82 @@ int writeGPIO(int pin, int value)
 
 int readGPIO(int pin)
 {
-  char path[100];
-  char value_str[3];
-  int fd;
-
-  snprintf(path, 100, "/sys/class/gpio/gpio%d/value", pin);
-  if ((fd = open(path, O_RDONLY)) == -1)
+  int value = -1;
+  struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip0");
+  if (chip == NULL)
+  {
+    debug(1, "Error: cannot open chip /dev/gpiochip0");
     return -1;
+  }
 
-  if (read(fd, value_str, 3) == -1)
+  struct gpiod_request_config *req_cfg = gpiod_request_config_new();
+  if (req_cfg == NULL)
+  {
+    debug(1, "Error: cannot create request config");
+    gpiod_chip_close(chip);
     return -1;
+  }
+  gpiod_request_config_set_consumer(req_cfg, "openjvs-sense");
 
-  close(fd);
-  return (atoi(value_str));
+  struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
+  if (line_settings == NULL)
+  {
+    debug(1, "Error: cannot create line settings");
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return -1;
+  }
+  gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_INPUT);
+
+  struct gpiod_line_config *line_config = gpiod_line_config_new();
+  if (line_config == NULL)
+  {
+    debug(1, "Error: cannot create line config");
+    gpiod_line_settings_free(line_settings);
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return -1;
+  }
+
+  unsigned int LINE_OFFSET = (unsigned int)pin;
+  int rc = gpiod_line_config_add_line_settings(line_config, &LINE_OFFSET, 1, line_settings);
+  if (rc < 0)
+  {
+    debug(1, "Error: cannot add line settings to line config");
+    gpiod_line_config_free(line_config);
+    gpiod_line_settings_free(line_settings);
+    gpiod_request_config_free(req_cfg);
+    gpiod_chip_close(chip);
+    return -1;
+  }
+
+  struct gpiod_line_request *request = gpiod_chip_request_lines(chip, req_cfg, line_config);
+  if (request == NULL)
+  {
+    debug(1, "Error: cannot request line for reading");
+    rc = -1;
+  }
+  else
+  {
+    enum gpiod_line_value line_value;
+    rc = gpiod_line_request_get_values(request, &line_value);
+    if (rc < 0)
+    {
+      debug(1, "Error: cannot read value from line %d", pin);
+      value = -1;
+    }
+    else
+    {
+      value = (line_value == GPIOD_LINE_VALUE_ACTIVE) ? 1 : 0;
+    }
+    gpiod_line_request_release(request);
+  }
+
+  gpiod_line_config_free(line_config);
+  gpiod_line_settings_free(line_settings);
+  gpiod_request_config_free(req_cfg);
+  gpiod_chip_close(chip);
+  return value;
 }
 
 int setSenseLine(int state)
