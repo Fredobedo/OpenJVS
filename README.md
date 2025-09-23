@@ -16,17 +16,19 @@ dtoverlay=uart3-pi5
 4. In case you use openJVS HAT  with your raspberry pi 5, change openJVS config file "DEVICE_PATH /dev/ttyAMA2", all jumpers on the left, UART2 on GPIO 4 & 5 (****).  
 5. make sure to have  /etc/openjvs/devices/pwr_button.disabled, so openJVS does not take into account the raspberry pi 5's power button as input device.
 
-  
+    
 (\*) Changes in dtoverlay:  
 - https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README  
 - https://pip.raspberrypi.com/categories/685-app-notes-guides-whitepapers/documents/RP-006553-WP/A-history-of-GPIO-usage-on-Raspberry-Pi-devices-and-current-best-practices.pdf  
+  
 (\*\*) OpenJVS HAT GPIO usage:   
 - https://github.com/OpenJVS/OpenJVS/blob/master/docs/OpenJVS_IO_Manual_1.2.pdf  
+  
 (\*\*\*)  new tools:  
 - https://libgpiod.readthedocs.io/en/latest/gpio_tools.html  
+  
 (\*\*\*\*)  UART2, GPIO 4 & 5:   
 https://github.com/raspberrypi/firmware/blob/e57538c91b473d23f98bf41fcffdc61b4198a632/boot/overlays/README#L5292  
-
 
 
 What's openJVS?  
