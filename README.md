@@ -17,11 +17,11 @@ dtoverlay=uart3-pi5
 5. make sure to have  /etc/openjvs/devices/pwr_button.disabled, so openJVS does not take into account the raspberry pi 5's power button as input device.
 
   
-(*)    changes in dtoverlay:   https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README  
-(*)    https://pip.raspberrypi.com/categories/685-app-notes-guides-whitepapers/documents/RP-006553-WP/A-history-of-GPIO-usage-on-Raspberry-Pi-devices-and-current-best-practices.pdf  
-(**)   openJVS HAT GPIO usage: https://github.com/OpenJVS/OpenJVS/blob/master/docs/OpenJVS_IO_Manual_1.2.pdf
-(***)  new tools:              https://libgpiod.readthedocs.io/en/latest/gpio_tools.html  
-(****) https://github.com/raspberrypi/firmware/blob/e57538c91b473d23f98bf41fcffdc61b4198a632/boot/overlays/README#L5292  
+(\*) changes in dtoverlay:   https://github.com/raspberrypi/firmware/blob/master/boot/overlays/README  
+https://pip.raspberrypi.com/categories/685-app-notes-guides-whitepapers/documents/RP-006553-WP/A-history-of-GPIO-usage-on-Raspberry-Pi-devices-and-current-best-practices.pdf  
+(\*\*)   openJVS HAT GPIO usage: https://github.com/OpenJVS/OpenJVS/blob/master/docs/OpenJVS_IO_Manual_1.2.pdf  
+(\*\*\*)  new tools:              https://libgpiod.readthedocs.io/en/latest/gpio_tools.html  
+(\*\*\*\*) https://github.com/raspberrypi/firmware/blob/e57538c91b473d23f98bf41fcffdc61b4198a632/boot/overlays/README#L5292  
 
 
 
