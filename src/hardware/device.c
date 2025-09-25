@@ -17,6 +17,167 @@ int writeGPIO(int pin, int value);
 struct gpiod_chip *chip;
 struct gpiod_line *line;
 
+// FRED NEW CODE STARTS HERE
+// USAGE:
+// gpio_handler_t *led, *button;
+
+//  led    = gpio_setup_output(17, 0);
+//  button = gpio_setup_input(27);
+
+//  gpio_write(led, 1);
+//  int button_state = gpio_read(button);
+
+//  GPIO handler structure to manage requests typedef struct
+typedef struct
+{
+  struct gpiod_line_request *request;
+  unsigned int offset;
+} gpio_handler_t;
+
+// Generic method to create a line request
+static struct gpiod_line_request *create_line_request(unsigned int offset,
+                                                      int direction,
+                                                      int initial_value,
+                                                      const char *consumer)
+{
+  struct gpiod_chip *chip;
+  struct gpiod_line_settings *settings;
+  struct gpiod_line_config *line_cfg;
+  struct gpiod_request_config *req_cfg;
+  struct gpiod_line_request *request;
+
+  // Open the GPIO chip
+  chip = gpiod_chip_open("/dev/gpiochip0");
+  if (!chip)
+  {
+    perror("Failed to open GPIO chip");
+    return NULL;
+  }
+
+  // Create and configure line settings
+  settings = gpiod_line_settings_new();
+  if (!settings)
+  {
+    gpiod_chip_close(chip);
+    return NULL;
+  }
+
+  gpiod_line_settings_set_direction(settings, direction);
+  if (direction == GPIOD_LINE_DIRECTION_OUTPUT)
+  {
+    gpiod_line_settings_set_output_value(settings, initial_value);
+  }
+
+  // Create line configuration
+  line_cfg = gpiod_line_config_new();
+  if (!line_cfg)
+  {
+    gpiod_line_settings_free(settings);
+    gpiod_chip_close(chip);
+    return NULL;
+  }
+
+  gpiod_line_config_add_line_settings(line_cfg, &offset, 1, settings);
+
+  // Create request configuration
+  req_cfg = gpiod_request_config_new();
+  if (req_cfg && consumer)
+  {
+    gpiod_request_config_set_consumer(req_cfg, consumer);
+  }
+
+  // Request the line
+  request = gpiod_chip_request_lines(chip, req_cfg, line_cfg);
+
+  // Clean up
+  gpiod_request_config_free(req_cfg);
+  gpiod_line_config_free(line_cfg);
+  gpiod_line_settings_free(settings);
+  gpiod_chip_close(chip);
+
+  return request;
+}
+
+// Setup GPIO as output
+gpio_handler_t *gpio_setup_output(unsigned int pin, int initial_value)
+{
+  gpio_handler_t *handler = malloc(sizeof(gpio_handler_t));
+  if (!handler)
+  {
+    return NULL;
+  }
+
+  handler->offset = pin;
+  handler->request = create_line_request(pin,
+                                         GPIOD_LINE_DIRECTION_OUTPUT,
+                                         initial_value,
+                                         "gpio-output");
+
+  if (!handler->request)
+  {
+    free(handler);
+    return NULL;
+  }
+
+  return handler;
+}
+
+// Setup GPIO as input
+gpio_handler_t *gpio_setup_input(unsigned int pin)
+{
+  gpio_handler_t *handler = malloc(sizeof(gpio_handler_t));
+  if (!handler)
+    return NULL;
+
+  handler->offset = pin;
+  handler->request = create_line_request(pin,
+                                         GPIOD_LINE_DIRECTION_INPUT,
+                                         0, // ignored for input
+                                         "gpio-input");
+
+  if (!handler->request)
+  {
+    free(handler);
+    return NULL;
+  }
+
+  return handler;
+}
+
+// Write to GPIO
+int gpio_write(gpio_handler_t *handler, int value)
+{
+  if (!handler || !handler->request)
+    return -1;
+
+  return gpiod_line_request_set_value(handler->request, handler->offset, value);
+}
+
+// Read from GPIO
+int gpio_read(gpio_handler_t *handler)
+{
+  if (!handler || !handler->request)
+    return -1;
+
+  return gpiod_line_request_get_value(handler->request, handler->offset);
+}
+
+// Cleanup
+void gpio_cleanup(gpio_handler_t *handler)
+{
+  if (handler)
+  {
+    if (handler->request)
+    {
+      gpiod_line_request_release(handler->request);
+    }
+    free(handler);
+  }
+}
+
+// FRED END NEW CODE HERE
+
+// OLD CODE STARTS HERE
 int initDevice(char *devicePath, int senseLineType, int senseLinePin)
 {
   if ((serialIO = open(devicePath, O_RDWR | O_NOCTTY | O_SYNC | O_NDELAY)) < 0)
@@ -30,8 +191,8 @@ int initDevice(char *devicePath, int senseLineType, int senseLinePin)
   localSenseLinePin = senseLinePin;
 
   /* Setup the GPIO pins */
-  if (localSenseLineType && setupGPIO(localSenseLinePin) == -1)
-    debug(0, "Sense line pin %d not available\n", senseLinePin);
+  // if (localSenseLineType && setupGPIO(localSenseLinePin) == -1)
+  //   debug(0, "Sense line pin %d not available\n", senseLinePin);
 
   /* Setup the GPIO pins initial state */
   switch (senseLineType)

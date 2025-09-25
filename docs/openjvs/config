@@ -12,7 +12,7 @@ EMULATE sega-type-3
 # SENSE_LINE_TYPE 0 - USB to RS485 with no sense line
 # SENSE_LINE_TYPE 1 - USB to RS485 with sense line
 # SENSE_LINE_TYPE 2 - Raspberry Pi OpenJVS Hat
-SENSE_LINE_TYPE 1
+SENSE_LINE_TYPE 2
 SENSE_LINE_PIN 12
 
 # Setup the debug mode for outputting debug information
@@ -21,7 +21,11 @@ SENSE_LINE_PIN 12
 DEBUG_MODE 0
 
 # Setup the device path
-DEVICE_PATH /dev/ttyUSB0
+# openjvs HAT on raspberry pi 3 => DEVICE_PATH /dev/ttyAMA0
+# openjvs HAT on raspberry pi 4 => DEVICE_PATH /dev/ttyAMA1
+# openjvs HAT on raspberry pi 5 => DEVICE_PATH /dev/ttyAMA2
+# Other USB RS485 dongle => DEVICE_PATH /dev/ttyUSBxxx
+DEVICE_PATH /dev/ttyAMA2
 
 # Automatic Controller Detection
 # If set to 0 OpenJVS will ignore all controllers
