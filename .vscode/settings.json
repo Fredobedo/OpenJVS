@@ -1,6 +1,7 @@
 {
     "files.associations": {
-        "string_view": "c"
+        "string_view": "c",
+        "serial.h": "c"
     },
     "editor.formatOnPaste": true,
     "editor.formatOnSave": true,

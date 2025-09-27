@@ -8,37 +8,20 @@
 int serialIO = -1;
 int localSenseLinePin = 12;
 int localSenseLineType = 0;
+gpio_handler_t *gpioLocalSenseLinePin;
 
 int setSerialAttributes(int fd, int myBaud);
-int setupGPIO(int pin);
-int setGPIODirection(int pin, int dir);
+
 int writeGPIO(int pin, int value);
 
 struct gpiod_chip *chip;
 struct gpiod_line *line;
 
-// FRED NEW CODE STARTS HERE
-// USAGE:
-// gpio_handler_t *led, *button;
-
-//  led    = gpio_setup_output(17, 0);
-//  button = gpio_setup_input(27);
-
-//  gpio_write(led, 1);
-//  int button_state = gpio_read(button);
-
-//  GPIO handler structure to manage requests typedef struct
-typedef struct
-{
-  struct gpiod_line_request *request;
-  unsigned int offset;
-} gpio_handler_t;
-
 // Generic method to create a line request
-static struct gpiod_line_request *create_line_request(unsigned int offset,
-                                                      int direction,
-                                                      int initial_value,
-                                                      const char *consumer)
+struct gpiod_line_request *create_line_request(unsigned int offset,
+                                               int direction,
+                                               int initial_value,
+                                               const char *consumer)
 {
   struct gpiod_chip *chip;
   struct gpiod_line_settings *settings;
@@ -116,6 +99,7 @@ gpio_handler_t *gpio_setup_output(unsigned int pin, int initial_value)
   if (!handler->request)
   {
     free(handler);
+
     return NULL;
   }
 
@@ -175,9 +159,6 @@ void gpio_cleanup(gpio_handler_t *handler)
   }
 }
 
-// FRED END NEW CODE HERE
-
-// OLD CODE STARTS HERE
 int initDevice(char *devicePath, int senseLineType, int senseLinePin)
 {
   if ((serialIO = open(devicePath, O_RDWR | O_NOCTTY | O_SYNC | O_NDELAY)) < 0)
@@ -190,11 +171,8 @@ int initDevice(char *devicePath, int senseLineType, int senseLinePin)
   localSenseLineType = senseLineType;
   localSenseLinePin = senseLinePin;
 
-  /* Setup the GPIO pins */
-  // if (localSenseLineType && setupGPIO(localSenseLinePin) == -1)
-  //   debug(0, "Sense line pin %d not available\n", senseLinePin);
-
   /* Setup the GPIO pins initial state */
+
   switch (senseLineType)
   {
   case 0:
@@ -202,11 +180,11 @@ int initDevice(char *devicePath, int senseLineType, int senseLinePin)
     break;
   case 1:
     debug(1, "Debug: Float/Sync sense line set\n");
-    setGPIODirection(senseLinePin, IN);
+    gpioLocalSenseLinePin = gpio_setup_input(localSenseLinePin);
     break;
   case 2:
     debug(1, "Debug: Complex sense line set\n");
-    setGPIODirection(senseLinePin, OUT);
+    gpioLocalSenseLinePin = gpio_setup_output(localSenseLinePin, 0);
     break;
   default:
     debug(0, "Debug: Invalid sense line type set\n");
@@ -296,152 +274,6 @@ int setSerialAttributes(int fd, int myBaud)
   usleep(100 * 1000); // Required to make flush work, for some reason
 
   return 0;
-}
-
-int setupGPIO(int pin)
-{
-  struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip0");
-  if (!chip)
-  {
-    debug(1, "Error: cannot open chip /dev/gpiochip0");
-    return 0;
-  }
-
-  struct gpiod_request_config *req_cfg = gpiod_request_config_new();
-  if (!req_cfg)
-  {
-    debug(1, "Error: cannot create request config");
-    gpiod_chip_close(chip);
-    return 0;
-  }
-  gpiod_request_config_set_consumer(req_cfg, "openjvs-sense");
-
-  struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
-  if (!line_settings)
-  {
-    debug(1, "Error: cannot create line settings");
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return 0;
-  }
-  // Default to input, can be changed later by setGPIODirection
-  gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_INPUT);
-
-  struct gpiod_line_config *line_config = gpiod_line_config_new();
-  if (!line_config)
-  {
-    debug(1, "Error: cannot create line config");
-    gpiod_line_settings_free(line_settings);
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return 0;
-  }
-
-  unsigned int LINE_OFFSET = (unsigned int)pin;
-  int rc = gpiod_line_config_add_line_settings(line_config, &LINE_OFFSET, 1, line_settings);
-  if (rc < 0)
-  {
-    debug(1, "Error: cannot add line settings to line config");
-    gpiod_line_config_free(line_config);
-    gpiod_line_settings_free(line_settings);
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return 0;
-  }
-
-  struct gpiod_line_request *request = gpiod_chip_request_lines(chip, req_cfg, line_config);
-  if (!request)
-  {
-    debug(1, "Error: cannot request line for setup");
-    rc = 0;
-  }
-  else
-  {
-    debug(1, "Debug: GPIO pin %d setup complete\n", pin);
-    gpiod_line_request_release(request);
-    rc = 1;
-  }
-
-  gpiod_line_config_free(line_config);
-  gpiod_line_settings_free(line_settings);
-  gpiod_request_config_free(req_cfg);
-  gpiod_chip_close(chip);
-
-  return rc;
-}
-
-int setGPIODirection(int pin, int dir)
-{
-  int rc = 0;
-  struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip0");
-  if (chip == NULL)
-  {
-    debug(1, "Error: cannot open chip /dev/gpiochip0");
-    return 0;
-  }
-
-  struct gpiod_request_config *req_cfg = gpiod_request_config_new();
-  if (req_cfg == NULL)
-  {
-    debug(1, "Error: cannot create request config");
-    gpiod_chip_close(chip);
-    return 0;
-  }
-  gpiod_request_config_set_consumer(req_cfg, "openjvs-sense");
-
-  struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
-  if (line_settings == NULL)
-  {
-    debug(1, "Error: cannot create line settings");
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return 0;
-  }
-
-  if (dir == IN)
-    gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_INPUT);
-  else
-    gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_OUTPUT);
-
-  struct gpiod_line_config *line_config = gpiod_line_config_new();
-  if (line_config == NULL)
-  {
-    debug(1, "Error: cannot create line config");
-    gpiod_line_settings_free(line_settings);
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return 0;
-  }
-
-  unsigned int LINE_OFFSET = (unsigned int)pin;
-  rc = gpiod_line_config_add_line_settings(line_config, &LINE_OFFSET, 1, line_settings);
-  if (rc < 0)
-  {
-    debug(1, "Error: cannot add line settings to line config");
-    rc = 0;
-  }
-  else
-  {
-    struct gpiod_line_request *request = gpiod_chip_request_lines(chip, req_cfg, line_config);
-    if (request == NULL)
-    {
-      debug(1, "Error: cannot request line for direction");
-      rc = 0;
-    }
-    else
-    {
-      debug(1, "Debug: GPIO pin %d direction set to %s\n", pin, dir == IN ? "IN" : "OUT");
-      gpiod_line_request_release(request);
-      rc = 1;
-    }
-  }
-
-  gpiod_line_config_free(line_config);
-  gpiod_line_settings_free(line_settings);
-  gpiod_request_config_free(req_cfg);
-  gpiod_chip_close(chip);
-
-  return rc;
 }
 
 // 2 major changes here for Raspberry PI 5 support with latest builds:
@@ -541,86 +373,6 @@ int writeGPIO(int pin, int value)
   return rc;
 }
 
-int readGPIO(int pin)
-{
-  int value = -1;
-  struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip0");
-  if (chip == NULL)
-  {
-    debug(1, "Error: cannot open chip /dev/gpiochip0");
-    return -1;
-  }
-
-  struct gpiod_request_config *req_cfg = gpiod_request_config_new();
-  if (req_cfg == NULL)
-  {
-    debug(1, "Error: cannot create request config");
-    gpiod_chip_close(chip);
-    return -1;
-  }
-  gpiod_request_config_set_consumer(req_cfg, "openjvs-sense");
-
-  struct gpiod_line_settings *line_settings = gpiod_line_settings_new();
-  if (line_settings == NULL)
-  {
-    debug(1, "Error: cannot create line settings");
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return -1;
-  }
-  gpiod_line_settings_set_direction(line_settings, GPIOD_LINE_DIRECTION_INPUT);
-
-  struct gpiod_line_config *line_config = gpiod_line_config_new();
-  if (line_config == NULL)
-  {
-    debug(1, "Error: cannot create line config");
-    gpiod_line_settings_free(line_settings);
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return -1;
-  }
-
-  unsigned int LINE_OFFSET = (unsigned int)pin;
-  int rc = gpiod_line_config_add_line_settings(line_config, &LINE_OFFSET, 1, line_settings);
-  if (rc < 0)
-  {
-    debug(1, "Error: cannot add line settings to line config");
-    gpiod_line_config_free(line_config);
-    gpiod_line_settings_free(line_settings);
-    gpiod_request_config_free(req_cfg);
-    gpiod_chip_close(chip);
-    return -1;
-  }
-
-  struct gpiod_line_request *request = gpiod_chip_request_lines(chip, req_cfg, line_config);
-  if (request == NULL)
-  {
-    debug(1, "Error: cannot request line for reading");
-    rc = -1;
-  }
-  else
-  {
-    enum gpiod_line_value line_value;
-    rc = gpiod_line_request_get_values(request, &line_value);
-    if (rc < 0)
-    {
-      debug(1, "Error: cannot read value from line %d", pin);
-      value = -1;
-    }
-    else
-    {
-      value = (line_value == GPIOD_LINE_VALUE_ACTIVE) ? 1 : 0;
-    }
-    gpiod_line_request_release(request);
-  }
-
-  gpiod_line_config_free(line_config);
-  gpiod_line_settings_free(line_settings);
-  gpiod_request_config_free(req_cfg);
-  gpiod_chip_close(chip);
-  return value;
-}
-
 int setSenseLine(int state)
 {
   if (localSenseLineType == 0)
@@ -633,7 +385,7 @@ int setSenseLine(int state)
   {
     if (!state)
     {
-      if (!setGPIODirection(localSenseLinePin, IN))
+      if ((gpioLocalSenseLinePin = gpio_setup_input(localSenseLinePin)) == NULL)
       {
         debug(1, "Warning: Failed to float sense line %d\n", localSenseLinePin);
         return 0;
@@ -641,7 +393,7 @@ int setSenseLine(int state)
     }
     else
     {
-      if (!setGPIODirection(localSenseLinePin, OUT) || !writeGPIO(localSenseLinePin, 0))
+      if ((gpioLocalSenseLinePin = gpio_setup_output(localSenseLinePin, 0)) == NULL)
       {
         debug(1, "Warning: Failed to sink sense line %d\n", localSenseLinePin);
         return 0;
@@ -650,22 +402,22 @@ int setSenseLine(int state)
   }
   break;
 
-  /* Switch Style */
+    /* Switch Style */
   case 2:
   {
     if (!state)
     {
-      if (!writeGPIO(localSenseLinePin, 0))
+      if (gpio_write(gpioLocalSenseLinePin, 0) < 0)
       {
-        printf("Warning: Failed to set sense line to 1 %d\n", localSenseLinePin);
+        printf("Warning: Failed to set sense line to 0 on GPIO %d\n", localSenseLinePin);
         return 0;
       }
     }
     else
     {
-      if (!writeGPIO(localSenseLinePin, 1))
+      if (gpio_write(gpioLocalSenseLinePin, 1) < 0)
       {
-        printf("Warning: Failed to sink sense line %d\n", localSenseLinePin);
+        printf("Warning: Failed to sink sense line to 1 on GPIO %d\n", localSenseLinePin);
         return 0;
       }
     }
