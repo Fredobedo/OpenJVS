@@ -1,6 +1,6 @@
 /**
  * OpenJVS Input Controller
- * Authors: Bobby Dilley, Redone, Fred 
+ * Authors: Bobby Dilley, Redone, Fred
  */
 
 #include <stdio.h>
@@ -25,7 +25,7 @@
 #include "controller/threading.h"
 
 #define BITS_PER_LONG (sizeof(long) * 8)
-#define NBITS(x) ((((x)-1) / BITS_PER_LONG) + 1)
+#define NBITS(x) ((((x) - 1) / BITS_PER_LONG) + 1)
 #define OFF(x) ((x) % BITS_PER_LONG)
 #define LONG(x) ((x) / BITS_PER_LONG)
 #define test_bit_diff(bit, array) ((array[LONG(bit)] >> OFF(bit)) & 1)
@@ -579,6 +579,13 @@ JVSInputStatus getInputs(DeviceList *deviceList)
         memset(bit, 0, sizeof(bit));
         ioctl(device, EVIOCGBIT(0, EV_MAX), bit[0]);
 
+        printf("FRED DEBUG - Device: %s Bits: ", deviceList->devices[i].name);
+        // for (size_t bitIndex = 0; bitIndex < sizeof(bit[0]) / sizeof(bit[0][0]); bitIndex++)
+        // {
+        //     printf(" %l", bit[0][bitIndex]);
+        // }
+        // printf("\n");
+
         // If it does repeating events and key events, it's probably a keyboard.
         if (!test_bit_diff(EV_ABS, bit[0]) && test_bit_diff(EV_REP, bit[0]) && test_bit_diff(EV_KEY, bit[0]))
             deviceList->devices[i].type = DEVICE_TYPE_KEYBOARD;
@@ -593,7 +600,7 @@ JVSInputStatus getInputs(DeviceList *deviceList)
         if (test_bit_diff(EV_KEY, bit[0]))
         {
             ioctl(device, EVIOCGBIT(EV_KEY, KEY_MAX), bit[EV_KEY]);
-            if (test_bit_diff(BTN_START, bit[EV_KEY]))
+            if (test_bit_diff(BTN_START, bit[EV_KEY]) || test_bit_diff(BTN_TRIGGER, bit[EV_KEY]))
                 deviceList->devices[i].type = DEVICE_TYPE_JOYSTICK;
         }
 
@@ -621,10 +628,10 @@ JVSInputStatus getInputs(DeviceList *deviceList)
 
 /**
  * Initialise all of the input devices and start the threads
- * 
+ *
  * This function initialises all the input devices that have mappings and
  * starts all of the appropriate threads.
- * 
+ *
  * @param outputMappingPath The path of the game mapping file
  * @param configPath The path to the configuration file
  * @param jvsIO The JVS IO object that we will send inputs to

@@ -1,0 +1,13 @@
+# Generic mapping file for driving games
+# Author: Bobby Dilley
+EMULATE sega-type-1
+
+# Include the generic mapping file
+INCLUDE generic
+
+ REVERSE
+# Add in analogue driving controls for steering, accel and break
+CONTROLLER_ANALOGUE_X CONTROLLER_1 ANALOGUE_1 REVERSE
+CONTROLLER_ANALOGUE_R CONTROLLER_1 ANALOGUE_3
+CONTROLLER_ANALOGUE_L CONTROLLER_1 ANALOGUE_2
+
