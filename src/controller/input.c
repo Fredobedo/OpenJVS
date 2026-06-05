@@ -579,13 +579,6 @@ JVSInputStatus getInputs(DeviceList *deviceList)
         memset(bit, 0, sizeof(bit));
         ioctl(device, EVIOCGBIT(0, EV_MAX), bit[0]);
 
-        printf("FRED DEBUG - Device: %s Bits: ", deviceList->devices[i].name);
-        // for (size_t bitIndex = 0; bitIndex < sizeof(bit[0]) / sizeof(bit[0][0]); bitIndex++)
-        // {
-        //     printf(" %l", bit[0][bitIndex]);
-        // }
-        // printf("\n");
-
         // If it does repeating events and key events, it's probably a keyboard.
         if (!test_bit_diff(EV_ABS, bit[0]) && test_bit_diff(EV_REP, bit[0]) && test_bit_diff(EV_KEY, bit[0]))
             deviceList->devices[i].type = DEVICE_TYPE_KEYBOARD;
