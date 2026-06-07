@@ -24,27 +24,27 @@
 #
 # Additional information
 # ----------------------
-# * Set gun in joystick mode:
-#   When you plug the USB cable into the PC or Raspberry PI, etc., 
-#   it will recognize three devices: mouse/keyboard/game controller, 
-#   but these three devices are not input devices at the same time. 
-#   -> The default is mouse + keyboard input. 
-#   -> PLEASE SWITCH IT TO GAME CONTROLLER INPUT FIRST.
+# (*) Set gun in joystick mode:
+#     When you plug the USB cable into the PC or Raspberry PI, etc., 
+#     it will recognize three devices: mouse/keyboard/game controller, 
+#     but these three devices are not input devices at the same time. 
+#      -> The default is mouse + keyboard input. 
+#      -> PLEASE SWITCH IT TO GAME CONTROLLER INPUT FIRST.
 # 
-#   Switching operation:
-#   Press and hold start button (first button near lens), then move joystick to the right and wait for 3 seconds,
-#   then LED3 lights up yellow, the light gun successfully switches to game controller input to PC.
+#     Switching operation:
+#     Press and hold start button (first button near lens), then move joystick to the right and wait for 3 seconds,
+#     then LED3 lights up yellow, the light gun successfully switches to game controller input to PC.
 # 
-# ** Set little button and Button at bottom of magazine:
-#    The small button on the handle and the big button at the bottom of the magazine can be switched as the BTN_THUMB & BTN_TOP. 
-#    => following configuration asumes you are using button at bottom of magazine for for reload (set as BTN_TOP)    
-#    => for games that need pedal, this one is mapped to CONTROLLER_BUTTON_D by now.
+# (**) Set little button and Button at bottom of magazine:
+#      The small button on the handle and the big button at the bottom of the magazine can be switched as the BTN_THUMB & BTN_TOP. 
+#       => following configuration assumes you are using button at bottom of magazine for for reload (set as BTN_TOP)    
+#       => for games that need pedal, this one is mapped to CONTROLLER_BUTTON_D by now.
 #
-#    Switching operation:
-#    press and hold the big button at the bottom of the magazine, then plug in the USB cable, wait 5 seconds and release it.
-#    Just press and hold the small button, then plug in the USB cable, wait 5 seconds and release it, the small button will become the reload button again. 
+#      Switching operation:
+#      press and hold the big button at the bottom of the magazine, then plug in the USB cable, wait 5 seconds and release it.
+#      Just press and hold the small button, then plug in the USB cable, wait 5 seconds and release it, the small button will become the reload button again. 
 #
-# External references: 
+# External references for additional settings (4:3 vs 16:9, dip switches, etc.): 
 # https://retroshooter.com/wp-content/uploads/2025/01/Retro-Shooter-User-Manual-2025.pdf
 # 
 ##################################################################
