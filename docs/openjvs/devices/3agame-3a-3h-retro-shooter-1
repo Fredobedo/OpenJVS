@@ -10,11 +10,11 @@
 # -----------------
 # pointer:                                type 3 (EV_ABS), code 0   (ABS_X) + code 1 (ABS_Y)
 # trigger:                                type 1 (EV_KEY), code 288 (BTN_TRIGGER), value 1
-# little rounded button (near trigger):   type 1 (EV_KEY), code 291 (BTN_TOP),     value 1
-# bottom button (bottom of the magazine): type 1 (EV_KEY), code 289 (BTN_THUMB),   value 1
-# first button (near lens):               type 1 (EV_KEY), code 290 (BTN_THUMB2),  value 1
+# little rounded button (near trigger):   type 1 (EV_KEY), code 289 (BTN_THUMB),   value 1 **
+# bottom button (bottom of the magazine): type 1 (EV_KEY), code 291 (BTN_TOP),     value 1 **
+# first button (near lens):               type 1 (EV_KEY), code 290 (BTN_THUMB2),  value 1 
 # second button (near lens):              type 1 (EV_KEY), code 293 (BTN_PINKIE),  value 1
-# Pedal:                                  type 1 (EV_KEY), code 289 (BTN_THUMB),   value 1 **
+# Pedal:                                  type 1 (EV_KEY), code 289 (BTN_THUMB),   value 1 
 # Joystick:
 #  - UP:     type 3 (EV_ABS), code 17 (ABS_HAT0Y), value -1
 #  - DOWN:   type 3 (EV_ABS), code 17 (ABS_HAT0Y), value  1
@@ -35,12 +35,15 @@
 #   Press and hold start button (first button near lens), then move joystick to the right and wait for 3 seconds,
 #   then LED3 lights up yellow, the light gun successfully switches to game controller input to PC.
 # 
-# ** Set Pedal as BTN_THUMB:
-#    The small button on the handle and the big button at the bottom of the magazine can be switched as the reload button. 
+# ** Set little button and Button at bottom of magazine:
+#    The small button on the handle and the big button at the bottom of the magazine can be switched as the BTN_THUMB & BTN_TOP. 
+#    => following configuration asumes you are using button at bottom of magazine for for reload (set as BTN_TOP)    
+#    => for games that need pedal, this one is mapped to CONTROLLER_BUTTON_D by now.
 #
 #    Switching operation:
 #    press and hold the big button at the bottom of the magazine, then plug in the USB cable, wait 5 seconds and release it.
-# 
+#    Just press and hold the small button, then plug in the USB cable, wait 5 seconds and release it, the small button will become the reload button again. 
+#
 # External references: 
 # https://retroshooter.com/wp-content/uploads/2025/01/Retro-Shooter-User-Manual-2025.pdf
 # 
@@ -54,11 +57,13 @@ BTN_TRIGGER CONTROLLER_BUTTON_A
 BTN_TOP CONTROLLER_BUTTON_C
 
 BTN_THUMB2 CONTROLLER_BUTTON_START
-BTN_PINKIE CONTROLLER_BUTTON_B
 
+# Let's use button at bottom of magazine for reload
+BTN_TOP CONTROLLER_BUTTON_B
+
+# pedal or little button
 BTN_THUMB CONTROLLER_BUTTON_D
 
-ABS_HAT0X CONTROLLER_BUTTON_TEST CONTROLLER_BUTTON_SERVICE
 ABS_HAT0Y CONTROLLER_BUTTON_UP CONTROLLER_BUTTON_DOWN
 
-BTN_TOP2 CONTROLLER_BUTTON_COIN
+BTN_TOP2 CONTROLLER_BUTTON_COIN CONTROLLER_1
